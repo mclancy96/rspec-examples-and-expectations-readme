@@ -21,8 +21,8 @@ Let’s meet the stars of the show, one by one!
 `describe` is used to group related tests. It’s like the title of a chapter in your code’s story. You’ll almost always start your spec files with a `describe` block.
 
 ```ruby
-# /spec/calculator_spec.rb
-RSpec.describe Calculator do
+# /spec/examples_spec.rb
+RSpec.describe RecipeTimer do
   # ...tests go here...
 end
 ```
@@ -30,20 +30,13 @@ end
 You can use `describe` for classes, methods, or even features. You can also nest `describe` blocks to organize tests for specific methods inside a class-level describe (e.g., `describe Calculator` with a nested `describe "#add"`). This helps keep your specs organized as your codebase grows (and you'll see more of this in Lesson 9):
 
 ```ruby
-# /spec/string_manipulator_spec.rb
-RSpec.describe StringManipulator do
-  # ...
-end
-
-# /spec/string_manipulator_spec.rb
-describe "#reverse" do
-  # ...
-end
-
-# /spec/calculator_spec.rb
-RSpec.describe Calculator do
-  describe "#add" do
-    # ...tests for add method...
+# /spec/examples_spec.rb
+RSpec.describe RecipeTimer do
+  describe "#start" do
+    # ...
+  end
+  describe "#tick" do
+    # ...
   end
 end
 ```
@@ -53,12 +46,12 @@ end
 `context` is used to describe a particular situation or state. It’s like a scene in your story. Use `context` to group tests that share a setup or condition.
 
 ```ruby
-# /spec/calculator_spec.rb
-context "when adding positive numbers" do
+# /spec/examples_spec.rb
+context "when timer is running" do
   # ...tests for this context...
 end
 
-context "when adding negative numbers" do
+context "when timer is stopped" do
   # ...tests for this context...
 end
 ```
@@ -69,14 +62,21 @@ You can nest `context` blocks inside `describe` blocks to organize your tests ev
 
 `it` defines an individual example (test case). It’s the action! Each `it` block should describe one thing your code should do.
 
+it "returns a negative result when subtracting a larger number" do
+
 ```ruby
-# /spec/calculator_spec.rb
-it "adds two numbers" do
-  expect(Calculator.new.add(2, 3)).to eq(5)
+# /spec/examples_spec.rb
+it "starts the timer" do
+  timer = RecipeTimer.new(10)
+  timer.start
+  expect(timer.running).to be true
 end
 
-it "returns a negative result when subtracting a larger number" do
-  expect(Calculator.new.subtract(2, 5)).to eq(-3)
+it "ticks up elapsed time when running" do
+  timer = RecipeTimer.new(10)
+  timer.start
+  timer.tick(3)
+  expect(timer.elapsed).to eq(3)
 end
 ```
 
@@ -87,8 +87,8 @@ end
 `expect` is how you set an expectation for your code. It’s like saying, “I expect this to happen!”
 
 ```ruby
-# /spec/calculator_spec.rb
-expect(Calculator.new.add(2, 3)).to eq(5)
+# /spec/examples_spec.rb
+expect(timer.elapsed).to eq(3)
 ```
 
 You can use `expect` with any value, method call, or expression. The magic happens when you add a matcher (like `eq`, `eql`, or `equal`) to say what you expect.
@@ -104,16 +104,13 @@ Matchers are how you tell RSpec what you expect. Here are three you’ll use a l
 Let’s see some examples and clarify the differences:
 
 ```ruby
-# /spec/calculator_spec.rb
-expect(5 + 5).to eq(10)      # true, because 5 + 5 == 10
-expect(5).to eq(5.0)         # true, because 5 == 5.0 in Ruby
-expect(5).to eql(5.0)        # false, because 5 (Integer) != 5.0 (Float)
-expect(5).to eql(5)          # true, because both are Integer 5
-foo = "bar"
-bar = foo
-expect(foo).to equal(bar)    # true, because foo and bar are the same object
-expect("bar").to equal("bar") # false, because these are two different string objects
-expect(:foo).to equal(:foo)  # true, because symbols are always the same object
+# /spec/examples_spec.rb
+expect(RecipeTimer.new(10).duration).to eq(10)      # true, because duration == 10
+expect(RecipeTimer.new(5).duration).to eql(5)       # true, both are Integer 5
+timer1 = RecipeTimer.new(10)
+timer2 = timer1
+expect(timer1).to equal(timer2)                     # true, same object
+expect(RecipeTimer.new(10)).not_to equal(RecipeTimer.new(10)) # false, different objects
 ```
 
 Try these out in IRB to see the results for yourself!
@@ -123,21 +120,31 @@ Try these out in IRB to see the results for yourself!
 Let’s write a full example, step by step, and see how all the pieces fit:
 
 ```ruby
-# /spec/calculator_spec.rb
-RSpec.describe Calculator do
-  context "when adding numbers" do
-    it "returns the sum of two positive numbers" do
-      expect(Calculator.new.add(2, 2)).to eq(4)
+# /spec/examples_spec.rb
+RSpec.describe RecipeTimer do
+  context "when ticking up time" do
+    it "does not advance if not running" do
+      timer = RecipeTimer.new(10)
+      timer.tick(5)
+      expect(timer.elapsed).to eq(0)
     end
 
-    it "returns the sum of a positive and a negative number" do
-      expect(Calculator.new.add(5, -3)).to eq(2)
+    it "advances when running" do
+      timer = RecipeTimer.new(10)
+      timer.start
+      timer.tick(4)
+      expect(timer.elapsed).to eq(4)
     end
   end
 
-  context "when subtracting numbers" do
-    it "returns the difference" do
-      expect(Calculator.new.subtract(10, 3)).to eq(7)
+  context "when resetting" do
+    it "resets elapsed and stops the timer" do
+      timer = RecipeTimer.new(20)
+      timer.start
+      timer.tick(10)
+      timer.reset
+      expect(timer.elapsed).to eq(0)
+      expect(timer.running).to be false
     end
   end
 end
@@ -154,24 +161,52 @@ You can add as many `context` and `it` blocks as you need to cover all the scena
 Here’s what the output might look like when you run the above spec:
 
 ```shell
-Calculator
-  when adding numbers
-    returns the sum of two positive numbers
-    returns the sum of a positive and a negative number
-  when subtracting numbers
-    returns the difference
+RecipeTimer
+  when ticking up time
+    does not advance if not running
+    advances when running
+  when resetting
+    resets elapsed and stops the timer
 
 Finished in 0.00123 seconds (files took 0.12345 seconds to load)
 3 examples, 0 failures
 ```
 
-## Practice Prompts
+## Getting Hands-On
 
-1. Write a `describe` block for a `StringManipulator` class. Inside, add a context for "when reversing a string" and an example that expects `StringManipulator.new.reverse("abc")` to equal "cba". (Hint: Use the file path comment at the top!)
-2. Try using `eq`, `eql`, and `equal` in IRB with different types and objects. What differences do you notice? Write down your observations.
-3. Why do you think RSpec uses plain English words like `describe` and `expect`? How does this help you (or your teammates) understand the tests?
-4. Add more `context` and `it` blocks to your own specs. How does this help organize your tests?
-5. Take a spec you’ve already written and rewrite it to be more explicit and organized. What changes?
+This lesson repo is set up for you to get hands-on practice with RSpec's examples and expectations using a real-world RecipeTimer domain.
+
+**To get started:**
+
+1. **Fork and Clone** this repository to your own GitHub account and local machine.
+2. **Install dependencies:**
+
+   ```sh
+   bundle install
+   ```
+
+3. **Run the specs:**
+
+   ```sh
+   bin/rspec
+   ```
+
+4. **Explore the code:**
+
+    - The main domain code is in `lib/recipe_timer.rb`.
+    - The robust example specs are in `spec/examples_spec.rb`.
+
+5. **Implement the pending specs:**
+
+    - There are at least two pending specs marked with `pending` in `spec/examples_spec.rb`.
+    - Your task: Remove the `pending` line and implement the expectation so the spec passes.
+
+6. **Experiment:**
+
+    - Try adding your own examples using `describe`, `context`, `it`, and `expect` with RecipeTimer.
+    - Make the specs fail on purpose to see the error messages and learn from them.
+
+All specs should pass except the pending ones. When you finish, all specs should be green!
 
 ---
 
