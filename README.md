@@ -1,6 +1,6 @@
 # RSpec: Examples and Expectations: The Heart of RSpec
 
-Welcome to Lesson 4! If RSpec were a movie, this would be the part where the main characters—`describe`, `context`, `it`, and `expect`—step into the spotlight. These are the building blocks of every RSpec test, and by the end of this lesson, you’ll know them like your favorite sitcom cast. We’re going to break down each one, show you how they work together, and give you plenty of examples (and clarifications!) so you’ll never be confused about what goes where.
+If RSpec were a movie, this would be the part where the main characters—`describe`, `context`, `it`, and `expect`—step into the spotlight. These are the building blocks of every RSpec test, and by the end of this lesson, you’ll know them like your favorite sitcom cast. We’re going to break down each one, show you how they work together, and give you plenty of examples (and clarifications!) so you’ll never be confused about what goes where.
 
 ---
 
